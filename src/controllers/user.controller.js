@@ -1,7 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { uploadOnCloudinary, deleteImgFromCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import fs from "fs";
 import * as jwt from "jsonwebtoken";
@@ -290,7 +290,7 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 
 });
 
-const updateAccountDeatails = asyncHandler(async (req, res) => {
+const updateAccountDetails = asyncHandler(async (req, res) => {
 
   const { fullName, email } = req.body;
 
@@ -313,7 +313,7 @@ const updateAccountDeatails = asyncHandler(async (req, res) => {
 
 });
 
-const updateAvtar = asyncHandler( async (req, res) => {
+const updateAvatar = asyncHandler( async (req, res) => {
 
   const avatarLoocalPath = req.file?.path;
 
@@ -329,9 +329,13 @@ const updateAvtar = asyncHandler( async (req, res) => {
 
   const user = await User.findById(req.user?._id);
 
+  const deleteUrl = user.avatar;
+
   user.avatar = avatar.url;
 
   await user.save({ validateBeforeSave: false });
+
+  await deleteImgFromCloudinary(deleteUrl);
 
   const updatedUser = await User.findById(req.user?._id).select("-password -refreshToken");
 
@@ -357,9 +361,13 @@ const updateCoverImage = asyncHandler( async (req, res) => {
 
   const user = await User.findById(req.user?._id);
 
+  const deleteUrl = user.coverImage;
+
   user.coverImage = coverImage.url;
 
   await user.save({ validateBeforeSave: false });
+
+  await deleteImgFromCloudinary(deleteUrl);
 
   const updatedUser = await User.findById(req.user?._id).select("-password -refreshToken");
 
@@ -376,7 +384,7 @@ export {
   refreshAccessToken,
   changeCurrentPassword,
   getCurrentUser,
-  updateAccountDeatails,
-  updateAvtar,
+  updateAccountDetails,
+  updateAvatar,
   updateCoverImage,
 };
